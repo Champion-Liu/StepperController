@@ -150,6 +150,14 @@ function btn_reset_Callback(hObject, eventdata, handles)
 set(handles.edit_state, 'string', 'RESET')
 set(handles.slider_pos, 'value', 0)
 slider_pos_Callback(handles.slider_pos, eventdata, handles)
+global ser
+
+try
+    fprintf(ser, 'RESET');
+catch err
+    set(handles.edit_state, 'string', 'unconnect')
+    msgbox('未连接到电机！', 'Error:')
+end
 
 % --- Executes on button press in btn_stop.
 function btn_stop_Callback(hObject, eventdata, handles)
@@ -157,6 +165,14 @@ function btn_stop_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 set(handles.edit_state, 'string', 'STOP')
+global ser
+
+try
+    fprintf(ser, 'STOP');
+catch err
+    set(handles.edit_state, 'string', 'unconnect')
+    msgbox('未连接到电机！', 'Error:')
+end
 
 % --- Executes on slider movement.
 function slider_pos_Callback(hObject, eventdata, handles)
@@ -164,6 +180,14 @@ function slider_pos_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 nowpos = get(hObject, 'Value');
+global ser
+
+try
+    pos = nowpos / 100.0 * 15000;
+    fprintf(ser, 'TARGET.SET %d', pos);
+catch err
+end
+
 set(handles.text_preset, 'string', ['当前设置：' ,num2str(nowpos), '%'])
 % Hints: get(hObject,'Value') returns position of slider
 %        get(hObject,'Min') and get(hObject,'Max') to determine range of slider
@@ -275,8 +299,8 @@ function Help_Callback(hObject, eventdata, handles)
 
 % --------------------------------------------------------------------
 function openSerial()
-    clear obj
-    global obj
+    clear ser
+    global ser
     list = seriallist;
     msgbox(list, '可用端口')
     portname = inputdlg('串口名称：', '连接电机');
@@ -285,13 +309,25 @@ function openSerial()
     end
     
     try
-        obj = serial(portname, 'Baudrate', 9600, 'Databits', 8);
-        fopen(obj);
-        obj.ReadAsynMode = 'continuous';
+        ser = serial(portname, 'Baudrate', 9600, 'Databits', 8);
+        set(ser, 'BytesAvailableFcnMode', 'Terminator');
+        set(ser, 'BytesAvailableFcn', @serialCallback);
+        set(ser, 'TimeOut', 1);
+        fopen(ser);
     catch err
         msgbox('串口打开失败', 'Error:')
     end
 
+% --------------------------------------------------------------------
+function serialCallback(obj, event) 
+    global ser
+    recv = fscanf(ser, '%s');
+    % parse commands:
+    % TODO:
+    
+    disp(recv);
+    
+    
 % --------------------------------------------------------------------
 function Begin_Callback(hObject, eventdata, handles)
 % hObject    handle to Begin (see GCBO)
@@ -311,7 +347,7 @@ function Exit_Callback(hObject, eventdata, handles)
 % hObject    handle to Exit (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-if exist('obj', 'var') == 1
-    fclose(obj);
+if exist('ser', 'var') == 1
+    fclose(ser);
 end
 close()
