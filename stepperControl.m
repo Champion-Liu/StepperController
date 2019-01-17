@@ -153,7 +153,7 @@ slider_pos_Callback(handles.slider_pos, eventdata, handles)
 global ser
 
 try
-    fprintf(ser, 'RESET');
+    fprintf(ser, 'RESET\n');
 catch err
     set(handles.edit_state, 'string', 'unconnect')
     msgbox('未连接到电机！', 'Error:')
@@ -168,7 +168,7 @@ set(handles.edit_state, 'string', 'STOP')
 global ser
 
 try
-    fprintf(ser, 'STOP');
+    fprintf(ser, 'STOP\n');
 catch err
     set(handles.edit_state, 'string', 'unconnect')
     msgbox('未连接到电机！', 'Error:')
@@ -184,7 +184,7 @@ global ser
 
 try
     pos = nowpos / 100.0 * 15000;
-    fprintf(ser, 'TARGET.SET %d', pos);
+    fprintf(ser, 'POS %d\n', pos);
 catch err
 end
 
@@ -300,7 +300,8 @@ function Help_Callback(hObject, eventdata, handles)
 % --------------------------------------------------------------------
 function openSerial()
     clear ser
-    global ser
+    global ser state
+    state = 'no';
     list = seriallist;
     msgbox(list, '可用端口')
     portname = inputdlg('串口名称：', '连接电机');
@@ -314,6 +315,8 @@ function openSerial()
         set(ser, 'BytesAvailableFcn', @serialCallback);
         set(ser, 'TimeOut', 1);
         fopen(ser);
+        set(handles.edit_state, 'string', 'connected')
+        state = 'yes';
     catch err
         msgbox('串口打开失败', 'Error:')
     end
@@ -325,9 +328,32 @@ function serialCallback(obj, event)
     % parse commands:
     % TODO:
     
-    disp(recv);
+    ret = textscan(recv, '%c%d');
+    cmd = ret{1};
+    val = ret{2};
+    cmdProcess(cmd, val)
     
-    
+% --------------------------------------------------------------------
+function cmdProcess(cmd, val)
+    if cmd == 'P'
+        % position callback
+        rp = val * 100.0 / 15000.0;
+        set(handles.edit_pos, 'string', [num2str(rp),' %'])
+    elseif cmd == 'V'
+        % velocity callback
+        rv = val * 100.0 / 10.0;
+        set(handles.edit_velocity, 'string', [num2str(rv),' cm/s'])
+    elseif cmd == 'S'
+        % state callback
+        if val == -1
+            set(handles.edit_state, 'string', 'ERROR')
+        elseif val == 0
+            set(handles.edit_state, 'string', 'RESET')
+        elseif val == 1
+            set(handles.edit_state, 'string', 'RUN')
+        end
+    end
+
 % --------------------------------------------------------------------
 function Begin_Callback(hObject, eventdata, handles)
 % hObject    handle to Begin (see GCBO)
@@ -347,7 +373,8 @@ function Exit_Callback(hObject, eventdata, handles)
 % hObject    handle to Exit (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-if exist('ser', 'var') == 1
+global ser state
+if strcmp(state, 'yes')
     fclose(ser);
 end
 close()
