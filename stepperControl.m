@@ -156,7 +156,7 @@ try
     fprintf(ser, 'RESET');
 catch err
     set(handles.edit_state, 'string', 'unconnect')
-    msgbox('Î´Á¬½Óµ½µç»ú£¡', 'Error:')
+    msgbox('Î´ï¿½ï¿½ï¿½Óµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½', 'Error:')
 end
 
 % --- Executes on button press in btn_stop.
@@ -171,7 +171,7 @@ try
     fprintf(ser, 'STOP');
 catch err
     set(handles.edit_state, 'string', 'unconnect')
-    msgbox('Î´Á¬½Óµ½µç»ú£¡', 'Error:')
+    msgbox('Î´ï¿½ï¿½ï¿½Óµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½', 'Error:')
 end
 
 % --- Executes on slider movement.
@@ -188,7 +188,7 @@ try
 catch err
 end
 
-set(handles.text_preset, 'string', ['µ±Ç°ÉèÖÃ£º' ,num2str(nowpos), '%'])
+set(handles.text_preset, 'string', ['ï¿½ï¿½Ç°ï¿½ï¿½ï¿½Ã£ï¿½' ,num2str(nowpos), '%'])
 % Hints: get(hObject,'Value') returns position of slider
 %        get(hObject,'Min') and get(hObject,'Max') to determine range of slider
 
@@ -284,10 +284,10 @@ function Author_Callback(hObject, eventdata, handles)
 % hObject    handle to Author (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-txt = {'²½½øµç»ú¿ØÖÆÌ¨ Based On Matlab', ...
-    '°æ±¾ºÅ£ºV1.0.0 - Special For OLab', ...
-    'Powered By ÒúÒ»   CopyRight(C)2019'};
-msgbox(txt, '¹ØÓÚ')
+txt = {'ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ì¨ Based On Matlab', ...
+    'ï¿½æ±¾ï¿½Å£ï¿½V1.0.0 - Special For OLab', ...
+    'Powered By ï¿½ï¿½Ò»   CopyRight(C)2019'};
+msgbox(txt, 'ï¿½ï¿½ï¿½ï¿½')
 
 % --------------------------------------------------------------------
 function Help_Callback(hObject, eventdata, handles)
@@ -303,8 +303,8 @@ function openSerial(handles)
     delete(instrfind);
     
     list = seriallist;
-    msgbox(list, '¿ÉÓÃ¶Ë¿Ú')
-    portname = inputdlg('´®¿ÚÃû³Æ£º', 'Á¬½Óµç»ú');
+    msgbox(list, 'ï¿½ï¿½ï¿½Ã¶Ë¿ï¿½')
+    portname = inputdlg('ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Æ£ï¿½', 'ï¿½ï¿½ï¿½Óµï¿½ï¿½');
     if isempty(portname)
         return
     end
@@ -321,7 +321,7 @@ function openSerial(handles)
         setappdata(0, 'serial', ser)
         setappdata(0, 'state', state)
     catch err
-        msgbox('´®¿Ú´ò¿ªÊ§°Ü', 'Error:')
+        msgbox('ï¿½ï¿½ï¿½Ú´ï¿½Ê§ï¿½ï¿½', 'Error:')
     end
         
 % --------------------------------------------------------------------
