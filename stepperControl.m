@@ -22,7 +22,7 @@ function varargout = stepperControl(varargin)
 
 % Edit the above text to modify the response to help stepperControl
 
-% Last Modified by GUIDE v2.5 15-Jan-2019 15:14:05
+% Last Modified by GUIDE v2.5 17-Jan-2019 21:27:41
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -150,10 +150,10 @@ function btn_reset_Callback(hObject, eventdata, handles)
 set(handles.edit_state, 'string', 'RESET')
 set(handles.slider_pos, 'value', 0)
 slider_pos_Callback(handles.slider_pos, eventdata, handles)
-global ser
+ser = getappdata(0, 'serial');
 
 try
-    fprintf(ser, 'RESET\n');
+    fprintf(ser, 'RESET');
 catch err
     set(handles.edit_state, 'string', 'unconnect')
     msgbox('未连接到电机！', 'Error:')
@@ -165,10 +165,10 @@ function btn_stop_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 set(handles.edit_state, 'string', 'STOP')
-global ser
+ser = getappdata(0, 'serial');
 
 try
-    fprintf(ser, 'STOP\n');
+    fprintf(ser, 'STOP');
 catch err
     set(handles.edit_state, 'string', 'unconnect')
     msgbox('未连接到电机！', 'Error:')
@@ -180,10 +180,10 @@ function slider_pos_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 nowpos = get(hObject, 'Value');
-global ser
-
+ser = getappdata(0, 'serial');
+format long
 try
-    pos = nowpos / 100.0 * 15000;
+    pos = fix(nowpos / 100.0 * 15000);
     fprintf(ser, 'POS %d\n', pos);
 catch err
 end
@@ -227,19 +227,17 @@ set(handles.rbt_fine, 'value', 1)
 % Hint: get(hObject,'Value') returns toggle state of rbt_fine
 
 
-% --- Executes on button press in cb_usecode.
-function cb_usecode_Callback(hObject, eventdata, handles)
-% hObject    handle to cb_usecode (see GCBO)
+% --- Executes on button press in cb_usetrace.
+function cb_usetrace_Callback(hObject, eventdata, handles)
+% hObject    handle to cb_usetrace (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 if get(hObject, 'value')
-    set(handles.edit_code, 'enable', 'on')
     set(handles.tgb_start, 'enable', 'on')
 else
-    set(handles.edit_code, 'enable', 'off')
     set(handles.tgb_start, 'enable', 'off')
 end
-% Hint: get(hObject,'Value') returns toggle state of cb_usecode
+% Hint: get(hObject,'Value') returns toggle state of cb_usetrace
 
 
 
@@ -298,10 +296,12 @@ function Help_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 % --------------------------------------------------------------------
-function openSerial()
-    clear ser
-    global ser state
+function openSerial(handles)
     state = 'no';
+    setappdata(0, 'state', state)
+    
+    delete(instrfind);
+    
     list = seriallist;
     msgbox(list, '可用端口')
     portname = inputdlg('串口名称：', '连接电机');
@@ -310,20 +310,23 @@ function openSerial()
     end
     
     try
-        ser = serial(portname, 'Baudrate', 9600, 'Databits', 8);
-        set(ser, 'BytesAvailableFcnMode', 'Terminator');
-        set(ser, 'BytesAvailableFcn', @serialCallback);
-        set(ser, 'TimeOut', 1);
+        ser = serial(portname{1});
         fopen(ser);
+        set(ser, 'BytesAvailableFcnMode', 'Terminator');
+        set(ser, 'BytesAvailableFcn', @(~,~)serialCallback(handles));
+        set(ser, 'TimeOut', 1);
         set(handles.edit_state, 'string', 'connected')
         state = 'yes';
+        
+        setappdata(0, 'serial', ser)
+        setappdata(0, 'state', state)
     catch err
         msgbox('串口打开失败', 'Error:')
     end
-
+        
 % --------------------------------------------------------------------
-function serialCallback(obj, event) 
-    global ser
+function serialCallback(handles) 
+    ser = getappdata(0, 'serial');
     recv = fscanf(ser, '%s');
     % parse commands:
     % TODO:
@@ -331,18 +334,18 @@ function serialCallback(obj, event)
     ret = textscan(recv, '%c%d');
     cmd = ret{1};
     val = ret{2};
-    cmdProcess(cmd, val)
+    cmdProcess(handles, cmd, val)
     
 % --------------------------------------------------------------------
-function cmdProcess(cmd, val)
+function cmdProcess(handles, cmd, val) 
     if cmd == 'P'
         % position callback
-        rp = val * 100.0 / 15000.0;
+        rp = fix(val * 100.0 / 15000.0);
         set(handles.edit_pos, 'string', [num2str(rp),' %'])
     elseif cmd == 'V'
         % velocity callback
-        rv = val * 100.0 / 10.0;
-        set(handles.edit_velocity, 'string', [num2str(rv),' cm/s'])
+        rv = fix(val * 100.0 / 10.0);
+        set(handles.edit_speed, 'string', [num2str(rv),' cm/s'])
     elseif cmd == 'S'
         % state callback
         if val == -1
@@ -366,15 +369,18 @@ function Serial_Callback(hObject, eventdata, handles)
 % hObject    handle to Serial (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-openSerial()
+openSerial(handles)
 
 % --------------------------------------------------------------------
 function Exit_Callback(hObject, eventdata, handles)
 % hObject    handle to Exit (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-global ser state
+ser = getappdata(0, 'serial');
+state = getappdata(0, 'state');
 if strcmp(state, 'yes')
     fclose(ser);
+    delete(instrfind);
 end
 close()
+
