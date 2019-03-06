@@ -153,10 +153,11 @@ slider_pos_Callback(handles.slider_pos, eventdata, handles)
 ser = getappdata(0, 'serial');
 
 try
-    fprintf(ser, 'RESET');
+    %fprintf(ser, 'RESET');
+    fprintf(ser, '5\n');
 catch err
     set(handles.edit_state, 'string', 'unconnect')
-    msgbox('Î´ï¿½ï¿½ï¿½Óµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½', 'Error:')
+    msgbox('Î´Óëµç»úÁ¬½Ó', 'Error:')
 end
 
 % --- Executes on button press in btn_stop.
@@ -168,10 +169,11 @@ set(handles.edit_state, 'string', 'STOP')
 ser = getappdata(0, 'serial');
 
 try
-    fprintf(ser, 'STOP');
+    %fprintf(ser, 'STOP');
+    fprintf(ser, '6\n');
 catch err
     set(handles.edit_state, 'string', 'unconnect')
-    msgbox('Î´ï¿½ï¿½ï¿½Óµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½', 'Error:')
+    msgbox('Î´Óëµç»úÁ¬½Ó', 'Error:')
 end
 
 % --- Executes on slider movement.
@@ -184,11 +186,12 @@ ser = getappdata(0, 'serial');
 format long
 try
     pos = fix(nowpos / 100.0 * 15000);
-    fprintf(ser, 'POS %d\n', pos);
+    %fprintf(ser, 'POS %d\n', pos);
+    fprintf(ser, '3 %ld\n', pos);
 catch err
 end
 
-set(handles.text_preset, 'string', ['ï¿½ï¿½Ç°ï¿½ï¿½ï¿½Ã£ï¿½' ,num2str(nowpos), '%'])
+set(handles.text_preset, 'string', ['µ±Ç°ÉèÖÃ£º' ,num2str(nowpos), '%'])
 % Hints: get(hObject,'Value') returns position of slider
 %        get(hObject,'Min') and get(hObject,'Max') to determine range of slider
 
@@ -284,10 +287,10 @@ function Author_Callback(hObject, eventdata, handles)
 % hObject    handle to Author (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-txt = {'ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ì¨ Based On Matlab', ...
-    'ï¿½æ±¾ï¿½Å£ï¿½V1.0.0 - Special For OLab', ...
-    'Powered By ï¿½ï¿½Ò»   CopyRight(C)2019'};
-msgbox(txt, 'ï¿½ï¿½ï¿½ï¿½')
+txt = {'²½½øµç»ú¿ØÖÆÆ÷ Based On Matlab', ...
+    '°æ±¾ºÅ£ºV1.0.0 - Special For OLab', ...
+    'Powered By ÒúÒ»   CopyRight(C)2019'};
+msgbox(txt, '×÷ÕßÐÅÏ¢')
 
 % --------------------------------------------------------------------
 function Help_Callback(hObject, eventdata, handles)
@@ -303,8 +306,8 @@ function openSerial(handles)
     delete(instrfind);
     
     list = seriallist;
-    msgbox(list, 'ï¿½ï¿½ï¿½Ã¶Ë¿ï¿½')
-    portname = inputdlg('ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Æ£ï¿½', 'ï¿½ï¿½ï¿½Óµï¿½ï¿½');
+    msgbox(list, '´®¿ÚÁÐ±í')
+    portname = inputdlg('ÇëÊäÈë´®¿ÚÃû×Ö', '¶Ë¿ÚºÅ£º');
     if isempty(portname)
         return
     end
@@ -321,7 +324,7 @@ function openSerial(handles)
         setappdata(0, 'serial', ser)
         setappdata(0, 'state', state)
     catch err
-        msgbox('ï¿½ï¿½ï¿½Ú´ï¿½Ê§ï¿½ï¿½', 'Error:')
+        msgbox('Î´Óëµç»úÁ¬½Ó', 'Error:')
     end
         
 % --------------------------------------------------------------------
